@@ -1,0 +1,14 @@
+{
+  "manifest_version": 2,
+  "name": "SlackUtil",
+  "version": "0.0.3",
+
+  "description": "slack utility",
+  "icons": {},
+
+  "content_scripts": [{
+    "matches": ["https://app.slack.com/*"],
+    "js": ["main.js"]
+  }]
+
+}
