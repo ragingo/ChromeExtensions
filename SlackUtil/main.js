@@ -96,7 +96,7 @@ const applyExpandButton = (type, section, channels) => {
         updateChannelList(type, channels);
       }
     );
-  section.insertBefore(button, section.firstChild);
+  section.appendChild(button);
 };
 
 const applyFilterInputText = (type, section, channels) => {
@@ -108,32 +108,38 @@ const applyFilterInputText = (type, section, channels) => {
         updateChannelList(type, channels);
       }
     );
-  section.insertBefore(input, section.firstChild);
+  section.appendChild(input);
 };
 
 const main = () => {
   const normalChannelSec = document.querySelector('[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="channels"]');
   if (normalChannelSec) {
     const normalChannels = Array.from(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="false"]'));
-    normalChannelSec.style.flexFlow = 'wrap-reverse';
     normalChannels
       .forEach(x => {
         hideChannel(x.parentElement);
       });
-    applyExpandButton('normal', normalChannelSec, normalChannels);
-    applyFilterInputText('normal', normalChannelSec, normalChannels);
+
+    const wrapper = document.createElement('div');
+    wrapper.style.marginLeft = '15px';
+    normalChannelSec.parentElement.parentElement.insertBefore(wrapper, normalChannelSec.parentElement.nextSibling);
+    applyFilterInputText('normal', wrapper, normalChannels);
+    applyExpandButton('normal', wrapper, normalChannels);
   }
 
   const starredChannelSec = document.querySelector('[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="starred"]');
   if (starredChannelSec) {
     const starredChannels = Array.from(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="true"]'));
-    starredChannelSec.style.flexFlow = 'wrap-reverse';
     starredChannels
       .forEach(x => {
         hideChannel(x.parentElement);
       });
-    applyExpandButton('starred', starredChannelSec, starredChannels);
-    applyFilterInputText('starred', starredChannelSec, starredChannels);
+
+    const wrapper = document.createElement('div');
+    wrapper.style.marginLeft = '15px';
+    starredChannelSec.parentElement.parentElement.insertBefore(wrapper, starredChannelSec.parentElement.nextSibling);
+    applyFilterInputText('starred', wrapper, starredChannels);
+    applyExpandButton('starred', wrapper, starredChannels);
   }
 };
 
