@@ -73,7 +73,12 @@ const updateChannelList = (type, channels) => {
 
   channels.forEach(x => {
     const name = x.firstChild.textContent;
-    if (new RegExp(state[type].filter, 'i').test(name)) {
+    let r = null;
+    try {
+      r = new RegExp(state[type].filter, 'i');
+    } catch {
+    }
+    if (r && r.test(name)) {
       showChannel(x.parentElement);
     }
   });
