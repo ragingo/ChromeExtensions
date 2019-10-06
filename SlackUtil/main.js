@@ -62,6 +62,18 @@ let state = {
   normal: { filter: '', expanded: false }
 };
 
+const loadState = () => {
+  try {
+    Object.assign(state, JSON.parse(localStorage.getItem('slackutil-state')));
+  } catch {}
+};
+
+const saveState = () => {
+  try {
+    localStorage.setItem('slackutil-state', JSON.stringify(state));
+  } catch {}
+};
+
 const updateChannelList = (type, channels) => {
   channels.forEach(x => {
     hideChannel(x.parentElement);
@@ -89,13 +101,16 @@ const applyExpandButton = (type, section, channels) => {
     createExpandButton(
       () => {
         state[type].expanded = true;
+        saveState();
         updateChannelList(type, channels);
       },
       () => {
         state[type].expanded = false;
+        saveState();
         updateChannelList(type, channels);
       }
     );
+  // TODO: load state[type].expanded
   section.appendChild(button);
 };
 
@@ -105,13 +120,17 @@ const applyFilterInputText = (type, section, channels) => {
       name,
       e => {
         state[type].filter = e.target.value;
+        saveState();
         updateChannelList(type, channels);
       }
     );
+  input.value = state[type].filter;
   section.appendChild(input);
 };
 
 const main = () => {
+  loadState();
+
   const normalChannelSec = document.querySelector('[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="channels"]');
   if (normalChannelSec) {
     const normalChannels = Array.from(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="false"]'));
