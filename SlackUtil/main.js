@@ -114,7 +114,7 @@ const createExpandButton = (onExpanded, onCollapsed) => {
 const createFilterInputText = (name, onTextChanged) => {
   const text = document.createElement('input');
   text.id = `channel-filter-text-${name}`;
-  text.placeholder = '正規表現でフィルタ';
+  text.placeholder = chrome.i18n.getMessage('app_filter_placeholder');
   text.addEventListener('input', onTextChanged);
   return text;
 };
