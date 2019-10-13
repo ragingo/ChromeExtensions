@@ -1,11 +1,11 @@
 {
-  "devDependencies": {
-    "typescript": "^3.6.4",
-    "webpack": "^4.41.1"
-  },
   "dependencies": {
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
     "react-redux": "^7.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^3.6.4",
+    "webpack": "^4.41.1"
   }
 }
