@@ -1,16 +1,27 @@
 {
+  "name": "slack-util",
+  "version": "0.0.12",
+  "author": "ragingo",
+  "scripts": {
+    "watch": "webpack --mode development --watch",
+    "build": "webpack --mode production"
+  },
   "dependencies": {
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
     "react-redux": "^7.1.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.6.4",
     "@types/react": "^16.9.5",
     "@types/react-dom": "^16.9.1",
     "@types/react-redux": "^7.1.4",
+    "babel-loader": "^8.0.6",
+    "tslint-loader": "^3.5.4",
     "typescript": "^3.6.4",
     "webpack": "^4.41.1",
     "webpack-cli": "^3.3.9",
     "webpack-dev-server": "^3.8.2"
-  }
+  },
+  "license": "MIT"
 }
