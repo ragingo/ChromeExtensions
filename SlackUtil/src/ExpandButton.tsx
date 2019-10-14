@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import classNames from 'classnames';
 
 export const ExpandButton = (props: {
   onExpanded: () => void,
@@ -7,6 +8,7 @@ export const ExpandButton = (props: {
 
   const [className, setClassName] = useState('is-collapsed');
   const [isCollapsed, setCollapsed] = useState(true);
+
   const onClick = useCallback(() => {
     setCollapsed(!isCollapsed);
     if (isCollapsed) {
@@ -15,8 +17,12 @@ export const ExpandButton = (props: {
       props.onExpanded();
     }
   }, [isCollapsed]);
+
   useEffect(() => {
-    setClassName(isCollapsed ? 'is-collapsed' : '');
+    const names = classNames('ExpandButton', {
+      'is-collapsed': isCollapsed
+    });
+    setClassName(names);
   }, [isCollapsed]);
 
   return (

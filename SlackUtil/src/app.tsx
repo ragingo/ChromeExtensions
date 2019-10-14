@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
+import { ChannelFilter } from './ChannelFilter';
 
 const prepare = (onCompleted) => {
 
@@ -26,10 +26,6 @@ const hideChannel = elem => {
   elem.style.height = 0;
 };
 
-const isShown = elem => {
-  return elem.style.height === '26px' && elem.style.visibility === 'visible';
-};
-
 const showUnreadsChannel = id => {
   const header = document.getElementById(`header-${id}`);
   if (!header) {
@@ -44,7 +40,7 @@ const showUnreadsChannel = id => {
     spacerTop.style.visibility = 'visible';
 
     let sibling = spacerTop.nextSibling;
-    while(sibling != null) {
+    while (sibling != null) {
       if (sibling.id.startsWith(`message-${id}`)) {
         sibling.style.display = 'block';
         sibling = sibling.nextSibling;
@@ -75,7 +71,7 @@ const hideUnreadsChannel = id => {
     spacerTop.style.visibility = 'hidden';
 
     let sibling = spacerTop.nextSibling;
-    while(sibling != null) {
+    while (sibling != null) {
       if (sibling.id.startsWith(`message-${id}`)) {
         sibling.style.display = 'none';
         sibling = sibling.nextSibling;
@@ -92,37 +88,6 @@ const hideUnreadsChannel = id => {
   }
 };
 
-const createExpandButton = (onExpanded, onCollapsed) => {
-  const button = document.createElement('button');
-  button.textContent = '🔼';
-  button.setAttribute('is-collapsed', 'true');
-  button.addEventListener('click', () => {
-    if (button.getAttribute('is-collapsed') === 'true') {
-      button.textContent = '🔽';
-      button.setAttribute('is-collapsed', 'false');
-      if (onExpanded) {
-        onExpanded();
-      }
-    }
-    else {
-      button.textContent = '🔼';
-      button.setAttribute('is-collapsed', 'true');
-      if (onCollapsed) {
-        onCollapsed();
-      }
-    }
-  });
-  return button;
-};
-
-const createFilterInputText = (name, onTextChanged) => {
-  const text = document.createElement('input');
-  text.id = `channel-filter-text-${name}`;
-  text.placeholder = chrome.i18n.getMessage('app_filter_placeholder');
-  text.addEventListener('input', onTextChanged);
-  return text;
-};
-
 let state = {
   starred: { filter: '', expanded: false },
   normal: { filter: '', expanded: false }
@@ -133,7 +98,7 @@ const loadState = () => {
     let root = {};
     Object.assign(root, JSON.parse(localStorage.getItem('slackutil-state')));
     Object.assign(state, root[currentTeamId()]);
-  } catch {}
+  } catch { }
 };
 
 /**
@@ -155,7 +120,7 @@ const saveState = () => {
 
     root[currentTeamId()] = state;
     localStorage.setItem('slackutil-state', JSON.stringify(root));
-  } catch {}
+  } catch { }
 };
 
 const currentTeamId = () => {
@@ -225,51 +190,40 @@ const updateAllUnreadsList = (type, channels) => {
   });
 };
 
-const applyExpandButton = (type, section, channels) => {
-  const button =
-    createExpandButton(
-      () => {
-        state[type].expanded = true;
-        saveState();
-        updateChannelList(type, channels);
-        updateAllUnreadsList(type, channels);
-      },
-      () => {
-        state[type].expanded = false;
-        saveState();
-        updateChannelList(type, channels);
-        updateAllUnreadsList(type, channels);
-      }
-    );
-  // TODO: load state[type].expanded
-  section.appendChild(button);
-
-  updateChannelList(type, channels);
-  updateAllUnreadsList(type, channels);
-};
-
-const applyFilterInputText = (type, section, channels) => {
-  const input =
-    createFilterInputText(
-      name,
-      e => {
-        state[type].filter = e.target.value;
-        saveState();
-        updateChannelList(type, channels);
-        updateAllUnreadsList(type, channels);
-      }
-    );
-  input.value = state[type].filter;
-  section.appendChild(input);
-
-  updateChannelList(type, channels);
-  updateAllUnreadsList(type, channels);
-};
 
 let sectionInfos = new Map();
 
 const main = () => {
   loadState();
+
+  const onTextChange = (props: {
+    type: string,
+    channels: Element[],
+    e: React.ChangeEvent<HTMLInputElement>
+  }) => {
+    state[props.type].filter = props.e.target.value;
+    saveState();
+    updateChannelList(props.type, props.channels);
+    updateAllUnreadsList(props.type, props.channels);
+  };
+  const onExpanded = (props: {
+    type: string,
+    channels: Element[]
+  }) => {
+    state[props.type].expanded = true;
+    saveState();
+    updateChannelList(props.type, props.channels);
+    updateAllUnreadsList(props.type, props.channels);
+  };
+  const onCollapsed = (props: {
+    type: string,
+    channels: Element[]
+  }) => {
+    state[props.type].expanded = false;
+    saveState();
+    updateChannelList(props.type, props.channels);
+    updateAllUnreadsList(props.type, props.channels);
+  };
 
   const normalChannelSec = document.querySelector('[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="channels"]');
   if (normalChannelSec) {
@@ -277,11 +231,19 @@ const main = () => {
     const wrapper = document.createElement('div');
     wrapper.style.marginLeft = '15px';
     normalChannelSec.parentElement.parentElement.insertBefore(wrapper, normalChannelSec.parentElement.nextSibling);
-    applyFilterInputText('normal', wrapper, normalChannels);
-    applyExpandButton('normal', wrapper, normalChannels);
 
-    sectionInfos.set('normal', normalChannels);
-}
+    const type = 'normal';
+    ReactDOM.render(
+      <ChannelFilter
+        filter={state[type].filter}
+        onFilterTextChanged={(e: any) => onTextChange({ type: type, channels: normalChannels, e })}
+        onCollapsed={() => onCollapsed({ type: type, channels: normalChannels })}
+        onExpanded={() => onExpanded({ type: type, channels: normalChannels })}
+      />,
+      wrapper
+    );
+    sectionInfos.set(type, normalChannels);
+  }
 
   const starredChannelSec = document.querySelector('[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="starred"]');
   if (starredChannelSec) {
@@ -289,39 +251,46 @@ const main = () => {
     const wrapper = document.createElement('div');
     wrapper.style.marginLeft = '15px';
     starredChannelSec.parentElement.parentElement.insertBefore(wrapper, starredChannelSec.parentElement.nextSibling);
-    applyFilterInputText('starred', wrapper, starredChannels);
-    applyExpandButton('starred', wrapper, starredChannels);
+    const type = 'starred';
+    ReactDOM.render(
+      <ChannelFilter
+        filter={state[type].filter}
+        onFilterTextChanged={(e: any) => onTextChange({ type: type, channels: starredChannels, e })}
+        onCollapsed={() => onCollapsed({ type: type, channels: starredChannels })}
+        onExpanded={() => onExpanded({ type: type, channels: starredChannels })}
+      />,
+      wrapper
+    );
 
-    sectionInfos.set('starred', starredChannels);
+    sectionInfos.set(type, starredChannels);
   }
 
   const unreadsButton = document.querySelector('[role="listitem"] > button[data-sidebar-link-id="Punreads"] > span[data-qa="channel_sidebar_name_page_punreads"]');
   if (unreadsButton) {
     unreadsButton.addEventListener('click', () => {
-      for(let [k ,v] of sectionInfos) {
+      for (let [k, v] of sectionInfos) {
         updateAllUnreadsList(k, v);
       }
     });
   }
 };
 
-prepare(() => {
-  main();
-});
-
-
 const App = () => {
   return (
-    <div>hello!</div>
+    <div></div>
   );
 };
 
-const rootContainer = document.createElement('div');
-rootContainer.id = 'slack-util-container';
-rootContainer.style.display = 'none';
-document.body.appendChild(rootContainer);
+prepare(() => {
+  const rootContainer = document.createElement('div');
+  rootContainer.id = 'slack-util-container';
+  rootContainer.style.display = 'none';
+  document.body.appendChild(rootContainer);
 
-ReactDOM.render(
-  <App />,
-  rootContainer
-);
+  ReactDOM.render(
+    <App />,
+    rootContainer
+  );
+
+  main();
+});
