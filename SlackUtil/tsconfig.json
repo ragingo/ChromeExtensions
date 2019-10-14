@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./src",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "incremental": true,
+    "jsx": "react",
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "newLine": "LF",
+    // "noEmit": true,
+    // "noEmitHelpers": true,
+    // "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
+    "sourceMap": true,
+    // "strict": true,
+    "target": "esnext",
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
