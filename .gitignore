@@ -1,4 +1,8 @@
-﻿!.gitkeep
-node_modules/
+﻿node_modules/
 yarn-error.log
-SlackUtil/dist/
+
+/SlackUtil/dist/*
+!/SlackUtil/dist/_locales
+!/SlackUtil/dist/manifest.json
+
+!.gitkeep

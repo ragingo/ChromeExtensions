@@ -9,7 +9,7 @@
 
   "content_scripts": [{
     "matches": ["https://app.slack.com/*"],
-    "js": ["main.js"]
+    "js": ["app.js"]
   }]
 
 }
