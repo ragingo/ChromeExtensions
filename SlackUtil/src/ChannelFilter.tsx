@@ -11,12 +11,12 @@ export const ChannelFilter = (props: {
 }) => {
   return (
     <div>
-      <ExpandButton onCollapsed={props.onCollapsed} onExpanded={props.onExpanded} />
       <input
         onChange={props.onFilterTextChanged}
         placeholder={chrome.i18n.getMessage('app_filter_placeholder')}
         value={props.filter}
       />
+      <ExpandButton onCollapsed={props.onCollapsed} onExpanded={props.onExpanded} />
     </div>
   );
 };

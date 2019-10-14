@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { ChannelFilter } from './ChannelFilter';
+import { ChannelSection } from './ChannelSection';
 
-const prepare = (onCompleted) => {
+const prepare = (onCompleted: () => void) => {
 
   const handle = setInterval(() => {
     const normalChannelSec = document.querySelector('[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="channels"]');
@@ -16,17 +16,30 @@ const prepare = (onCompleted) => {
 
 };
 
-const showChannel = elem => {
+class Channel {
+  constructor(private elem: HTMLElement) {
+  }
+  public show() {
+    this.elem.style.visibility = 'visible';
+    this.elem.style.height = '26px';
+  }
+  public hide() {
+    this.elem.style.visibility = 'hidden';
+    this.elem.style.height = '0';
+  }
+}
+
+const showChannel = (elem: HTMLElement) => {
   elem.style.visibility = 'visible';
   elem.style.height = '26px';
 };
 
-const hideChannel = elem => {
+const hideChannel = (elem: HTMLElement) => {
   elem.style.visibility = 'hidden';
-  elem.style.height = 0;
+  elem.style.height = '0';
 };
 
-const showUnreadsChannel = id => {
+const showUnreadsChannel = (id: string) => {
   const header = document.getElementById(`header-${id}`);
   if (!header) {
     return;
@@ -40,7 +53,10 @@ const showUnreadsChannel = id => {
     spacerTop.style.visibility = 'visible';
 
     let sibling = spacerTop.nextSibling;
-    while (sibling != null) {
+    while (sibling !== null) {
+      if (!(sibling instanceof HTMLElement)) {
+        continue;
+      }
       if (sibling.id.startsWith(`message-${id}`)) {
         sibling.style.display = 'block';
         sibling = sibling.nextSibling;
@@ -57,21 +73,24 @@ const showUnreadsChannel = id => {
   }
 };
 
-const hideUnreadsChannel = id => {
+const hideUnreadsChannel = (id: string) => {
   const header = document.getElementById(`header-${id}`);
   if (!header) {
     return;
   }
-  header.style.height = 0;
+  header.style.height = '0';
   header.style.visibility = 'hidden';
 
   const spacerTop = document.getElementById(`spacer-top-${id}`);
   if (spacerTop) {
-    spacerTop.style.height = 0;
+    spacerTop.style.height = '0';
     spacerTop.style.visibility = 'hidden';
 
     let sibling = spacerTop.nextSibling;
-    while (sibling != null) {
+    while (sibling !== null) {
+      if (!(sibling instanceof HTMLElement)) {
+        continue;
+      }
       if (sibling.id.startsWith(`message-${id}`)) {
         sibling.style.display = 'none';
         sibling = sibling.nextSibling;
@@ -83,7 +102,7 @@ const hideUnreadsChannel = id => {
 
   const spacerBottom = document.getElementById(`spacer-bottom-${id}`);
   if (spacerBottom) {
-    spacerBottom.style.height = 0;
+    spacerBottom.style.height = '0';
     spacerBottom.style.visibility = 'hidden';
   }
 };
@@ -132,18 +151,18 @@ const currentTeamId = () => {
   }
 };
 
-const getChannelName = elem => {
+const getChannelName = (elem: HTMLElement) => {
   return elem.firstChild.textContent;
 }
 
-const getChannelInfo = elem => {
-  const info = {};
-  info.id = elem.getAttribute('data-qa-channel-sidebar-channel-id') || '';
-  info.name = getChannelName(elem);
-  return info;
+const getChannelInfo = (elem: HTMLElement) => {
+  return {
+    id: elem.getAttribute('data-qa-channel-sidebar-channel-id') || '',
+    name: getChannelName(elem)
+  };
 }
 
-const updateChannelList = (type, channels) => {
+const updateChannelList = (type: string, channels: HTMLElement[]) => {
   channels.forEach(x => {
     hideChannel(x.parentElement);
   });
@@ -165,7 +184,7 @@ const updateChannelList = (type, channels) => {
   });
 };
 
-const updateAllUnreadsList = (type, channels) => {
+const updateAllUnreadsList = (type: string, channels: HTMLElement[]) => {
   const infos = channels.map(x => {
     return getChannelInfo(x)
   });
@@ -190,94 +209,81 @@ const updateAllUnreadsList = (type, channels) => {
   });
 };
 
-
 let sectionInfos = new Map();
 
-const main = () => {
-  loadState();
-
-  const onTextChange = (props: {
-    type: string,
-    channels: Element[],
-    e: React.ChangeEvent<HTMLInputElement>
-  }) => {
-    state[props.type].filter = props.e.target.value;
-    saveState();
-    updateChannelList(props.type, props.channels);
-    updateAllUnreadsList(props.type, props.channels);
-  };
-  const onExpanded = (props: {
-    type: string,
-    channels: Element[]
-  }) => {
-    state[props.type].expanded = true;
-    saveState();
-    updateChannelList(props.type, props.channels);
-    updateAllUnreadsList(props.type, props.channels);
-  };
-  const onCollapsed = (props: {
-    type: string,
-    channels: Element[]
-  }) => {
-    state[props.type].expanded = false;
-    saveState();
-    updateChannelList(props.type, props.channels);
-    updateAllUnreadsList(props.type, props.channels);
-  };
-
-  const normalChannelSec = document.querySelector('[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="channels"]');
-  if (normalChannelSec) {
-    const normalChannels = Array.from(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="false"]'));
-    const wrapper = document.createElement('div');
-    wrapper.style.marginLeft = '15px';
-    normalChannelSec.parentElement.parentElement.insertBefore(wrapper, normalChannelSec.parentElement.nextSibling);
-
-    const type = 'normal';
-    ReactDOM.render(
-      <ChannelFilter
-        filter={state[type].filter}
-        onFilterTextChanged={(e: any) => onTextChange({ type: type, channels: normalChannels, e })}
-        onCollapsed={() => onCollapsed({ type: type, channels: normalChannels })}
-        onExpanded={() => onExpanded({ type: type, channels: normalChannels })}
-      />,
-      wrapper
-    );
-    sectionInfos.set(type, normalChannels);
-  }
-
-  const starredChannelSec = document.querySelector('[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="starred"]');
-  if (starredChannelSec) {
-    const starredChannels = Array.from(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="true"]'));
-    const wrapper = document.createElement('div');
-    wrapper.style.marginLeft = '15px';
-    starredChannelSec.parentElement.parentElement.insertBefore(wrapper, starredChannelSec.parentElement.nextSibling);
-    const type = 'starred';
-    ReactDOM.render(
-      <ChannelFilter
-        filter={state[type].filter}
-        onFilterTextChanged={(e: any) => onTextChange({ type: type, channels: starredChannels, e })}
-        onCollapsed={() => onCollapsed({ type: type, channels: starredChannels })}
-        onExpanded={() => onExpanded({ type: type, channels: starredChannels })}
-      />,
-      wrapper
-    );
-
-    sectionInfos.set(type, starredChannels);
-  }
-
-  const unreadsButton = document.querySelector('[role="listitem"] > button[data-sidebar-link-id="Punreads"] > span[data-qa="channel_sidebar_name_page_punreads"]');
-  if (unreadsButton) {
-    unreadsButton.addEventListener('click', () => {
-      for (let [k, v] of sectionInfos) {
-        updateAllUnreadsList(k, v);
-      }
-    });
-  }
+const update = (
+  type: string,
+  channels: HTMLElement[]
+) => {
+  saveState();
+  updateChannelList(type, channels);
+  updateAllUnreadsList(type, channels);
 };
 
 const App = () => {
+  loadState();
+
+  let children: JSX.Element[] = [];
+  {
+    const type = 'normal';
+    const channels = Array.from<HTMLElement>(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="false"]'));
+    children.push(
+      <ChannelSection
+        type={type}
+        sectionSelector={'[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="channels"]'}
+        filter={state[type].filter}
+        onFilterTextChanged={e => {
+          state[type].filter = e.target.value;
+          update(type, channels);
+        }}
+        onCollapsed={() => {
+          state[type].expanded = false;
+          update(type, channels);
+        }}
+        onExpanded={() => {
+          state[type].expanded = true;
+          update(type, channels);
+        }}
+      />
+    );
+  }
+  {
+    const type = 'starred';
+    const channels = Array.from<HTMLElement>(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="true"]'));
+    children.push(
+      <ChannelSection
+        type={type}
+        sectionSelector={'[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="starred"]'}
+        filter={state[type].filter}
+        onFilterTextChanged={e => {
+          state[type].filter = e.target.value;
+          update(type, channels);
+        }}
+        onCollapsed={() => {
+          state[type].expanded = false;
+          update(type, channels);
+        }}
+        onExpanded={() => {
+          state[type].expanded = true;
+          update(type, channels);
+        }}
+      />
+    );
+  }
+
+  // const unreadsButton = document.querySelector('[role="listitem"] > button[data-sidebar-link-id="Punreads"] > span[data-qa="channel_sidebar_name_page_punreads"]');
+  // if (unreadsButton) {
+  //   unreadsButton.addEventListener('click', () => {
+  //     for (let [k, v] of sectionInfos) {
+  //       updateAllUnreadsList(k, v);
+  //     }
+  //   });
+  // }
+
   return (
-    <div></div>
+    <div className="App">
+      {children}
+    </div>
   );
 };
 
@@ -292,5 +298,4 @@ prepare(() => {
     rootContainer
   );
 
-  main();
 });
