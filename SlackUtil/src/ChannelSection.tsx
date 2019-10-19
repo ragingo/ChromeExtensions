@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { ChannelFilter } from './ChannelFilter';
 
@@ -7,50 +7,46 @@ type Props = {
   sectionSelector: string,
   // channelsSelector: string,
   filter: string,
-  onFilterTextChanged: (e: React.ChangeEvent<HTMLInputElement>) => void,
+  onFilterTextChanged: (value: string) => void,
   onExpanded: () => void,
   onCollapsed: () => void
 };
 
 export const ChannelSection = (props: Props) => {
-  const section = useMemo(() => {
-    return document.querySelector(props.sectionSelector);
-  }, [props.sectionSelector]);
+  const section = document.querySelector(props.sectionSelector);
 
   // const channels = useMemo(() => {
   //   return Array.from<HTMLElement>(document.querySelectorAll(props.channelsSelector));
   // }, [props.channelsSelector]);
 
   const customMenuWrapper = useMemo(() => {
-    if (section === null) {
+    if (!section) {
       return null;
     }
     const wrapper = document.createElement('div');
+    wrapper.className = 'ChannelSectionWrapper';
     wrapper.style.marginLeft = '15px';
+    console.log(section);
     section.parentElement.parentElement.insertBefore(wrapper, section.parentElement.nextSibling);
     return wrapper;
   }, [section]);
 
   // const [filter, setFilter] = useState(props.filter);
 
-  const channelFilter = useMemo(() => {
-    if (customMenuWrapper === null) {
-      return <></>;
-    }
-    return (
-      <ChannelFilter
-        filter={props.filter}
-        onFilterTextChanged={props.onFilterTextChanged}
-        onCollapsed={props.onCollapsed}
-        onExpanded={props.onExpanded}
-      />);
-  }, [customMenuWrapper, props.filter])
-
+  if (!section) {
+    return null;
+  }
+  console.log('props.filter', props.filter);
 
   return (
     <>
       {ReactDOM.createPortal(
-        channelFilter,
+        <ChannelFilter
+          filter={props.filter}
+          onFilterTextChanged={props.onFilterTextChanged}
+          onCollapsed={props.onCollapsed}
+          onExpanded={props.onExpanded}
+        />,
         customMenuWrapper)
       }
     </>

@@ -5,14 +5,14 @@ import { ExpandButton } from './ExpandButton';
 
 export const ChannelFilter = (props: {
   filter: string,
-  onFilterTextChanged: (e: React.ChangeEvent<HTMLInputElement>) => void,
+  onFilterTextChanged: (value: string) => void,
   onExpanded: () => void,
   onCollapsed: () => void
 }) => {
   return (
     <div>
       <input
-        onChange={props.onFilterTextChanged}
+        onChange={e => props.onFilterTextChanged(e.target.value)}
         placeholder={chrome.i18n.getMessage('app_filter_placeholder')}
         value={props.filter}
       />

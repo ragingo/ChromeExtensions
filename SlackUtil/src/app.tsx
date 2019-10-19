@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback, ChangeEvent, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { ChannelSection } from './ChannelSection';
 
@@ -209,12 +209,15 @@ const updateAllUnreadsList = (type: string, channels: HTMLElement[]) => {
   });
 };
 
-let sectionInfos = new Map();
-
 const update = (
   type: string,
+  filter: string,
+  expanded: boolean,
   channels: HTMLElement[]
 ) => {
+  state[type].filter = filter;
+  state[type].expanded = expanded;
+  console.log(state);
   saveState();
   updateChannelList(type, channels);
   updateAllUnreadsList(type, channels);
@@ -223,53 +226,26 @@ const update = (
 const App = () => {
   loadState();
 
-  let children: JSX.Element[] = [];
-  {
-    const type = 'normal';
-    const channels = Array.from<HTMLElement>(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="false"]'));
-    children.push(
-      <ChannelSection
-        type={type}
-        sectionSelector={'[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="channels"]'}
-        filter={state[type].filter}
-        onFilterTextChanged={e => {
-          state[type].filter = e.target.value;
-          update(type, channels);
-        }}
-        onCollapsed={() => {
-          state[type].expanded = false;
-          update(type, channels);
-        }}
-        onExpanded={() => {
-          state[type].expanded = true;
-          update(type, channels);
-        }}
-      />
-    );
-  }
-  {
-    const type = 'starred';
-    const channels = Array.from<HTMLElement>(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="true"]'));
-    children.push(
-      <ChannelSection
-        type={type}
-        sectionSelector={'[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="starred"]'}
-        filter={state[type].filter}
-        onFilterTextChanged={e => {
-          state[type].filter = e.target.value;
-          update(type, channels);
-        }}
-        onCollapsed={() => {
-          state[type].expanded = false;
-          update(type, channels);
-        }}
-        onExpanded={() => {
-          state[type].expanded = true;
-          update(type, channels);
-        }}
-      />
-    );
-  }
+  // TODO: あとで直す
+  const [localState, setLocalState] = useState<Map<string, { filter: string, expanded: boolean }>>(
+    new Map([
+      [ 'normal', { filter: '', expanded: true } ],
+      [ 'starred', { filter: '', expanded: true } ],
+    ])
+  );
+
+  const sectionInfos = useMemo(() => [
+    {
+      type: 'normal',
+      channels: Array.from<HTMLElement>(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="false"]')),
+      sectionSelector: '[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="channels"]'
+    },
+    {
+      type: 'starred',
+      channels: Array.from<HTMLElement>(document.querySelectorAll('[role="listitem"] > a[data-drag-type="channel"][data-qa-channel-sidebar-is-starred="true"]')),
+      sectionSelector: '[role="listitem"] > .p-channel_sidebar__section_heading[data-qa="starred"]'
+    }
+  ], []);
 
   // const unreadsButton = document.querySelector('[role="listitem"] > button[data-sidebar-link-id="Punreads"] > span[data-qa="channel_sidebar_name_page_punreads"]');
   // if (unreadsButton) {
@@ -282,7 +258,35 @@ const App = () => {
 
   return (
     <div className="App">
-      {children}
+      {sectionInfos.map(info => {
+        return (
+          <ChannelSection
+            key={info.type}
+            type={info.type}
+            sectionSelector={info.sectionSelector}
+            filter={localState.get(info.type).filter}
+            onFilterTextChanged={v => {
+              console.log(v);
+              const s = localState;
+              s.set(info.type, { filter: v, expanded: s.get(info.type).expanded });
+              setLocalState(s);
+              update(info.type, v, state[info.type].expanded, info.channels);
+            }}
+            onCollapsed={() => {
+              const s = localState;
+              s.set(info.type, { filter: s.get(info.type).filter, expanded: false });
+              setLocalState(s);
+              update(info.type, state[info.type].filter, false, info.channels);
+            }}
+            onExpanded={() => {
+              const s = localState;
+              s.set(info.type, { filter: s.get(info.type).filter, expanded: true });
+              setLocalState(s);
+              update(info.type, state[info.type].filter, true, info.channels);
+            }}
+          />
+        );
+      })}
     </div>
   );
 };
@@ -297,5 +301,4 @@ prepare(() => {
     <App />,
     rootContainer
   );
-
 });
