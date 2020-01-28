@@ -164,7 +164,7 @@ const currentTeamId = () => {
 };
 
 const getChannelName = elem => {
-  return elem.firstChild.textContent;
+  return elem.querySelector('.p-channel_sidebar__name').textContent;
 }
 
 const getChannelInfo = elem => {
